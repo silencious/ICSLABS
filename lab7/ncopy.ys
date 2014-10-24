@@ -1,0 +1,282 @@
+#/* Name: Tian Jiahe */
+#/* ID: 5130379056 */
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len ints to dst.
+# Return the number of positive ints (>0) contained in src.
+#
+# Include your name and ID here.
+#/* Name: Tian Jiahe */
+#/* ID: 5130379056 */
+# Describe how and why you Modified the baseline code.
+#
+# 1. replace 'irmovl+addl' with iaddl, less instructions
+# 2. rewrite the epilogue with leave, less instructions
+# 3. loop unrolling, reduce jump instructions
+# 4. use jump table, 'pushl+ret' jumps to the 'Last' parts
+# 5. use mrmovl instead of adding %ebx and %ecx, less instructions
+# 6. optimize loop, break's position, reduce jump instructions
+# 7. arrange the combination of 'andl+mrmovl+rmmovl+jle', 
+#    edit .hcl file accordingly, copy ifun of 'jle' to 'mrmovl', 
+#    let mrmovl compute Cnd, avoid misprediction.
+#    (this optimization cannot be used in the last 16 parts)
+# 8. more description about hcl's modification, see .hcl file
+#
+##################################################################
+# Do not modify this portion
+# Function prologue.
+ncopy:	pushl %ebp		# Save old frame pointer
+	rrmovl %esp,%ebp	# Set up new frame pointer
+	pushl %esi		# Save callee-save regs
+	pushl %ebx
+	pushl %edi
+	mrmovl 8(%ebp),%ebx	# src
+	mrmovl 16(%ebp),%edx	# len
+	mrmovl 12(%ebp),%ecx	# dst
+
+##################################################################
+# You can modify this portion
+	# Loop header
+	xorl %eax,%eax          # set to 0
+    iaddl $-16,%edx         # sub 16 in advance
+    jle Break               # if number of data <= 16, don't enter loop
+Loop:
+	mrmovl (%ebx),%esi
+	rmmovl %esi,(%ecx)      # here is the combination:
+	andl %esi,%esi          #   andl
+	mrmovl 4(%ebx),%edi     #   mrmovl
+	rmmovl %edi,4(%ecx)     #   rmmovl
+    jle Npos1               #   jle
+    iaddl $1,%eax           # avoid misprediction
+Npos1:
+	andl %edi,%edi
+	mrmovl 8(%ebx),%esi
+	rmmovl %esi,8(%ecx)
+    jle Npos2
+    iaddl $1,%eax
+Npos2:
+	andl %esi,%esi
+	mrmovl 12(%ebx),%edi
+	rmmovl %edi,12(%ecx)
+    jle Npos3
+    iaddl $1,%eax
+Npos3:
+	andl %edi,%edi
+	mrmovl 16(%ebx),%esi
+	rmmovl %esi,16(%ecx)
+    jle Npos4
+    iaddl $1,%eax
+Npos4:
+	andl %esi,%esi
+	mrmovl 20(%ebx),%edi
+	rmmovl %edi,20(%ecx)
+    jle Npos5
+    iaddl $1,%eax
+Npos5:
+	andl %edi,%edi
+	mrmovl 24(%ebx),%esi
+	rmmovl %esi,24(%ecx)
+    jle Npos6
+    iaddl $1,%eax
+Npos6:
+	andl %esi,%esi
+	mrmovl 28(%ebx),%edi
+	rmmovl %edi,28(%ecx)
+    jle Npos7
+    iaddl $1,%eax
+Npos7:
+	andl %edi,%edi
+	mrmovl 32(%ebx),%esi
+	rmmovl %esi,32(%ecx)
+    jle Npos8
+    iaddl $1,%eax
+Npos8:
+	andl %esi,%esi
+	mrmovl 36(%ebx),%edi
+	rmmovl %edi,36(%ecx)
+    jle Npos9
+    iaddl $1,%eax
+Npos9:
+	andl %edi,%edi
+	mrmovl 40(%ebx),%esi
+	rmmovl %esi,40(%ecx)
+    jle Npos10
+    iaddl $1,%eax
+Npos10:
+	andl %esi,%esi
+	mrmovl 44(%ebx),%edi
+	rmmovl %edi,44(%ecx)
+    jle Npos11
+    iaddl $1,%eax
+Npos11:
+	andl %edi,%edi
+	mrmovl 48(%ebx),%esi
+	rmmovl %esi,48(%ecx)
+    jle Npos12
+    iaddl $1,%eax
+Npos12:
+	andl %esi,%esi
+	mrmovl 52(%ebx),%edi
+	rmmovl %edi,52(%ecx)
+    jle Npos13
+    iaddl $1,%eax
+Npos13:
+	andl %edi,%edi
+	mrmovl 56(%ebx),%esi
+	rmmovl %esi,56(%ecx)
+    jle Npos14
+    iaddl $1,%eax
+Npos14:
+	andl %esi,%esi
+	mrmovl 60(%ebx),%edi
+	rmmovl %edi,60(%ecx)
+    jle Npos15
+    iaddl $1,%eax
+Npos15:
+	andl %edi,%edi
+    jle Npos16
+    iaddl $1,%eax
+Npos16:
+    iaddl $64,%ebx
+    iaddl $64,%ecx
+    iaddl $-16,%edx
+    jg Loop
+
+Break:
+    addl %edx,%edx
+    addl %edx,%edx
+    mrmovl Jump(%edx),%edi      # use jump table
+    pushl %edi                  # push the address to stack
+    ret                         # jump to destination
+Last16:
+	mrmovl 60(%ebx),%esi
+	rmmovl %esi,60(%ecx)
+	andl %esi,%esi
+    jle Last15
+    iaddl $1,%eax
+Last15:
+	mrmovl 56(%ebx),%esi
+	rmmovl %esi,56(%ecx)
+	andl %esi,%esi
+    jle Last14
+    iaddl $1,%eax
+Last14:
+	mrmovl 52(%ebx),%esi
+	rmmovl %esi,52(%ecx)
+	andl %esi,%esi
+    jle Last13
+    iaddl $1,%eax
+Last13:
+	mrmovl 48(%ebx),%esi
+	rmmovl %esi,48(%ecx)
+	andl %esi,%esi
+    jle Last12
+    iaddl $1,%eax
+Last12:
+	mrmovl 44(%ebx),%esi
+	rmmovl %esi,44(%ecx)
+	andl %esi,%esi
+    jle Last11
+    iaddl $1,%eax
+Last11:
+	mrmovl 40(%ebx),%esi
+	rmmovl %esi,40(%ecx)
+	andl %esi,%esi 
+    jle Last10
+    iaddl $1,%eax
+Last10:
+	mrmovl 36(%ebx),%esi
+	rmmovl %esi,36(%ecx)
+	andl %esi,%esi
+    jle Last9
+    iaddl $1,%eax
+Last9:
+	mrmovl 32(%ebx),%esi
+	rmmovl %esi,32(%ecx)
+	andl %esi,%esi
+    jle Last8
+    iaddl $1,%eax
+Last8:
+	mrmovl 28(%ebx),%esi
+	rmmovl %esi,28(%ecx)
+	andl %esi,%esi
+    jle Last7
+    iaddl $1,%eax
+Last7:
+	mrmovl 24(%ebx),%esi
+	rmmovl %esi,24(%ecx)
+	andl %esi,%esi
+    jle Last6
+    iaddl $1,%eax
+Last6:
+	mrmovl 20(%ebx),%esi
+	rmmovl %esi,20(%ecx)
+	andl %esi,%esi
+    jle Last5
+    iaddl $1,%eax
+Last5:
+	mrmovl 16(%ebx),%esi
+	rmmovl %esi,16(%ecx)
+	andl %esi,%esi
+    jle Last4
+    iaddl $1,%eax
+Last4:
+	mrmovl 12(%ebx),%esi
+	rmmovl %esi,12(%ecx)
+	andl %esi,%esi
+    jle Last3
+    iaddl $1,%eax
+Last3:
+	mrmovl 8(%ebx),%esi
+	rmmovl %esi,8(%ecx)
+	andl %esi,%esi
+    jle Last2
+    iaddl $1,%eax
+Last2:
+	mrmovl 4(%ebx),%esi
+	rmmovl %esi,4(%ecx)
+	andl %esi,%esi
+    jle Last1
+    iaddl $1,%eax
+Last1:
+	mrmovl (%ebx),%esi
+	rmmovl %esi,(%ecx)
+	andl %esi,%esi
+    jle Last0
+    iaddl $1,%eax
+Last0:                      # optimize the epilogue
+	leave
+	ret
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	popl %edi               # Restore callee-save registers
+	popl %ebx
+	popl %esi
+	rrmovl %ebp, %esp
+	popl %ebp
+	ret
+##################################################################
+JumpTable:
+    .long Last0
+    .long Last1
+    .long Last2
+    .long Last3
+    .long Last4
+    .long Last5
+    .long Last6
+    .long Last7
+    .long Last8
+    .long Last9
+    .long Last10
+    .long Last11
+    .long Last12
+    .long Last13
+    .long Last14
+    .long Last15
+Jump:
+    .long Last16
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */

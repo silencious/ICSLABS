@@ -1,0 +1,47 @@
+/* Name: Tian Jiahe */
+/* ID: 5130379056 */
+
+# Execution begins at address 0 
+	.pos 0 
+init:
+	irmovl Stack,%esp  	# Set up stack pointer  
+	rrmovl %esp,%ebp  	# Set up base pointer  
+    irmovl ele1,%edx
+    pushl %edx 
+    call rsum_list
+    halt
+
+# Sample linked list
+.align 4
+ele1:
+    .long 0x00a
+    .long ele2
+ele2:
+    .long 0x0b0
+    .long ele3
+ele3:
+    .long 0xc00
+    .long 0	
+
+
+# int rsum_list(list_ptr ls)
+rsum_list:
+	pushl %ebp
+	rrmovl %esp,%ebp
+	mrmovl 8(%ebp),%edx
+    andl %edx,%edx 
+	je     End
+	mrmovl (%edx),%ecx
+	addl %ecx,%eax
+    mrmovl 4(%edx),%edx
+    pushl %edx
+	call rsum_list
+End:
+    xorl %ecx,%ecx
+	rrmovl %ebp,%esp
+	popl %ebp
+	ret
+
+# The stack starts here and grows to lower addresses
+	.pos 0x100		
+Stack:	 

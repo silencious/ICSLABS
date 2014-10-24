@@ -1,0 +1,454 @@
+#######################################################################
+# Test for copying block of size 17;
+#######################################################################
+	.pos 0
+main:	irmovl Stack, %esp  	# Set up stack pointer
+	irmovl Stack, %ebp  	# Set up base pointer
+
+	# Set up arguments for copy function and then invoke it
+	irmovl $17, %eax		# src and dst have 17 elements
+	pushl %eax
+	irmovl dest, %eax	# dst array
+	pushl %eax
+	irmovl src, %eax	# src array
+	pushl %eax
+	call ncopy		 
+	call check	        # Call checker code
+	halt                    # should halt with 0xaaaa in %eax
+StartFun:
+#/* Name: Tian Jiahe */
+#/* ID: 5130379056 */
+#/* $begin ncopy-ys */
+##################################################################
+# ncopy.ys - Copy a src block of len ints to dst.
+# Return the number of positive ints (>0) contained in src.
+#
+# Include your name and ID here.
+#/* Name: Tian Jiahe */
+#/* ID: 5130379056 */
+# Describe how and why you Modified the baseline code.
+#
+# 1. replace 'irmovl+addl' with iaddl, less instructions
+# 2. rewrite the epilogue with leave, less instructions
+# 3. loop unrolling, reduce jump instructions
+# 4. use jump table, 'pushl+ret' jumps to the 'Last' parts
+# 5. use mrmovl instead of adding %ebx and %ecx, less instructions
+# 6. optimize loop, break's position, reduce jump instructions
+# 7. arrange the combination of 'andl+mrmovl+rmmovl+jle', 
+#    edit .hcl file accordingly, copy ifun of 'jle' to 'mrmovl', 
+#    let mrmovl compute Cnd, avoid misprediction.
+#    (this optimization cannot be used in the last 16 parts)
+# 8. more description about hcl's modification, see .hcl file
+#
+##################################################################
+# Do not modify this portion
+# Function prologue.
+ncopy:	pushl %ebp		# Save old frame pointer
+	rrmovl %esp,%ebp	# Set up new frame pointer
+	pushl %esi		# Save callee-save regs
+	pushl %ebx
+	pushl %edi
+	mrmovl 8(%ebp),%ebx	# src
+	mrmovl 16(%ebp),%edx	# len
+	mrmovl 12(%ebp),%ecx	# dst
+
+##################################################################
+# You can modify this portion
+	# Loop header
+	xorl %eax,%eax          # set to 0
+    iaddl $-16,%edx         # sub 16 in advance
+    jle Break               # if number of data <= 16, don't enter loop
+Loop:
+	mrmovl (%ebx),%esi
+	rmmovl %esi,(%ecx)      # here is the combination:
+	andl %esi,%esi          #   andl
+	mrmovl 4(%ebx),%edi     #   mrmovl
+	rmmovl %edi,4(%ecx)     #   rmmovl
+    jle Npos1               #   jle
+    iaddl $1,%eax           # avoid misprediction
+Npos1:
+	andl %edi,%edi
+	mrmovl 8(%ebx),%esi
+	rmmovl %esi,8(%ecx)
+    jle Npos2
+    iaddl $1,%eax
+Npos2:
+	andl %esi,%esi
+	mrmovl 12(%ebx),%edi
+	rmmovl %edi,12(%ecx)
+    jle Npos3
+    iaddl $1,%eax
+Npos3:
+	andl %edi,%edi
+	mrmovl 16(%ebx),%esi
+	rmmovl %esi,16(%ecx)
+    jle Npos4
+    iaddl $1,%eax
+Npos4:
+	andl %esi,%esi
+	mrmovl 20(%ebx),%edi
+	rmmovl %edi,20(%ecx)
+    jle Npos5
+    iaddl $1,%eax
+Npos5:
+	andl %edi,%edi
+	mrmovl 24(%ebx),%esi
+	rmmovl %esi,24(%ecx)
+    jle Npos6
+    iaddl $1,%eax
+Npos6:
+	andl %esi,%esi
+	mrmovl 28(%ebx),%edi
+	rmmovl %edi,28(%ecx)
+    jle Npos7
+    iaddl $1,%eax
+Npos7:
+	andl %edi,%edi
+	mrmovl 32(%ebx),%esi
+	rmmovl %esi,32(%ecx)
+    jle Npos8
+    iaddl $1,%eax
+Npos8:
+	andl %esi,%esi
+	mrmovl 36(%ebx),%edi
+	rmmovl %edi,36(%ecx)
+    jle Npos9
+    iaddl $1,%eax
+Npos9:
+	andl %edi,%edi
+	mrmovl 40(%ebx),%esi
+	rmmovl %esi,40(%ecx)
+    jle Npos10
+    iaddl $1,%eax
+Npos10:
+	andl %esi,%esi
+	mrmovl 44(%ebx),%edi
+	rmmovl %edi,44(%ecx)
+    jle Npos11
+    iaddl $1,%eax
+Npos11:
+	andl %edi,%edi
+	mrmovl 48(%ebx),%esi
+	rmmovl %esi,48(%ecx)
+    jle Npos12
+    iaddl $1,%eax
+Npos12:
+	andl %esi,%esi
+	mrmovl 52(%ebx),%edi
+	rmmovl %edi,52(%ecx)
+    jle Npos13
+    iaddl $1,%eax
+Npos13:
+	andl %edi,%edi
+	mrmovl 56(%ebx),%esi
+	rmmovl %esi,56(%ecx)
+    jle Npos14
+    iaddl $1,%eax
+Npos14:
+	andl %esi,%esi
+	mrmovl 60(%ebx),%edi
+	rmmovl %edi,60(%ecx)
+    jle Npos15
+    iaddl $1,%eax
+Npos15:
+	andl %edi,%edi
+    jle Npos16
+    iaddl $1,%eax
+Npos16:
+    iaddl $64,%ebx
+    iaddl $64,%ecx
+    iaddl $-16,%edx
+    jg Loop
+
+Break:
+    addl %edx,%edx
+    addl %edx,%edx
+    mrmovl Jump(%edx),%edi      # use jump table
+    pushl %edi                  # push the address to stack
+    ret                         # jump to destination
+Last16:
+	mrmovl 60(%ebx),%esi
+	rmmovl %esi,60(%ecx)
+	andl %esi,%esi
+    jle Last15
+    iaddl $1,%eax
+Last15:
+	mrmovl 56(%ebx),%esi
+	rmmovl %esi,56(%ecx)
+	andl %esi,%esi
+    jle Last14
+    iaddl $1,%eax
+Last14:
+	mrmovl 52(%ebx),%esi
+	rmmovl %esi,52(%ecx)
+	andl %esi,%esi
+    jle Last13
+    iaddl $1,%eax
+Last13:
+	mrmovl 48(%ebx),%esi
+	rmmovl %esi,48(%ecx)
+	andl %esi,%esi
+    jle Last12
+    iaddl $1,%eax
+Last12:
+	mrmovl 44(%ebx),%esi
+	rmmovl %esi,44(%ecx)
+	andl %esi,%esi
+    jle Last11
+    iaddl $1,%eax
+Last11:
+	mrmovl 40(%ebx),%esi
+	rmmovl %esi,40(%ecx)
+	andl %esi,%esi 
+    jle Last10
+    iaddl $1,%eax
+Last10:
+	mrmovl 36(%ebx),%esi
+	rmmovl %esi,36(%ecx)
+	andl %esi,%esi
+    jle Last9
+    iaddl $1,%eax
+Last9:
+	mrmovl 32(%ebx),%esi
+	rmmovl %esi,32(%ecx)
+	andl %esi,%esi
+    jle Last8
+    iaddl $1,%eax
+Last8:
+	mrmovl 28(%ebx),%esi
+	rmmovl %esi,28(%ecx)
+	andl %esi,%esi
+    jle Last7
+    iaddl $1,%eax
+Last7:
+	mrmovl 24(%ebx),%esi
+	rmmovl %esi,24(%ecx)
+	andl %esi,%esi
+    jle Last6
+    iaddl $1,%eax
+Last6:
+	mrmovl 20(%ebx),%esi
+	rmmovl %esi,20(%ecx)
+	andl %esi,%esi
+    jle Last5
+    iaddl $1,%eax
+Last5:
+	mrmovl 16(%ebx),%esi
+	rmmovl %esi,16(%ecx)
+	andl %esi,%esi
+    jle Last4
+    iaddl $1,%eax
+Last4:
+	mrmovl 12(%ebx),%esi
+	rmmovl %esi,12(%ecx)
+	andl %esi,%esi
+    jle Last3
+    iaddl $1,%eax
+Last3:
+	mrmovl 8(%ebx),%esi
+	rmmovl %esi,8(%ecx)
+	andl %esi,%esi
+    jle Last2
+    iaddl $1,%eax
+Last2:
+	mrmovl 4(%ebx),%esi
+	rmmovl %esi,4(%ecx)
+	andl %esi,%esi
+    jle Last1
+    iaddl $1,%eax
+Last1:
+	mrmovl (%ebx),%esi
+	rmmovl %esi,(%ecx)
+	andl %esi,%esi
+    jle Last0
+    iaddl $1,%eax
+Last0:                      # optimize the epilogue
+	leave
+	ret
+##################################################################
+# Do not modify the following section of code
+# Function epilogue.
+Done:
+	popl %edi               # Restore callee-save registers
+	popl %ebx
+	popl %esi
+	rrmovl %ebp, %esp
+	popl %ebp
+	ret
+##################################################################
+JumpTable:
+    .long Last0
+    .long Last1
+    .long Last2
+    .long Last3
+    .long Last4
+    .long Last5
+    .long Last6
+    .long Last7
+    .long Last8
+    .long Last9
+    .long Last10
+    .long Last11
+    .long Last12
+    .long Last13
+    .long Last14
+    .long Last15
+Jump:
+    .long Last16
+# Keep the following label at the end of your function
+End:
+#/* $end ncopy-ys */
+EndFun:
+#################################################################### 
+# Epilogue code for the correctness testing driver
+####################################################################
+
+# This is the correctness checking code.
+# It checks:
+#   1. %eax has 7.  Set %eax to 0xbbbb if not.
+#   2. The total length of the code is less than or equal to 1000.
+#      Set %eax to 0xcccc if not.
+#   3. The source data was copied to the destination.
+#      Set %eax to 0xdddd if not.
+#   4. The words just before and just after the destination region
+#      were not corrupted.  Set %eax to 0xeeee if not.
+# If all checks pass, then sets %eax to 0xaaaa
+check:
+	pushl %ebp
+	rrmovl %esp,%ebp
+	pushl %esi
+	pushl %ebx
+	pushl %edi
+	# Return value test
+	irmovl $7,%edx
+	subl %edx,%eax
+	je checkb
+	irmovl $0xbbbb,%eax  # Failed test #1
+	jmp cdone
+checkb:
+	# Code length check
+	irmovl EndFun,%eax
+	irmovl StartFun,%edx
+	subl %edx,%eax
+	irmovl $1000,%edx
+	subl %eax,%edx
+	jge checkm
+	irmovl $0xcccc,%eax  # Failed test #2
+	jmp cdone
+checkm:
+	irmovl dest, %edx # Pointer to next destination location
+	irmovl src,%ebx   # Pointer to next source location
+	irmovl $17,%edi  # Count
+	andl %edi,%edi
+	je checkpre         # Skip check if count = 0
+mcloop:
+	mrmovl (%edx),%eax
+	mrmovl (%ebx),%esi
+	subl %esi,%eax
+	je  mok
+	irmovl $0xdddd,%eax # Failed test #3
+	jmp cdone
+mok:
+	irmovl $4,%eax
+	addl %eax,%edx	  # dest ++
+	addl %eax,%ebx    # src++
+	irmovl $1,%eax
+	subl %eax,%edi    # cnt--
+	jg mcloop
+checkpre:
+	# Check for corruption
+	irmovl Predest,%edx
+	mrmovl (%edx), %eax  # Get word before destination
+	irmovl $0xbcdefa, %edx
+	subl %edx,%eax
+	je checkpost
+	irmovl $0xeeee,%eax  # Failed test #4
+	jmp cdone
+checkpost:
+	# Check for corruption
+	irmovl Postdest,%edx
+	mrmovl (%edx), %eax  # Get word after destination
+	irmovl $0xdefabc, %edx
+	subl %edx,%eax
+	je checkok
+	irmovl $0xeeee,%eax # Failed test #4
+	jmp cdone
+checkok:
+	# Successful checks
+	irmovl $0xaaaa,%eax
+cdone:
+	popl %edi
+	popl %ebx
+	popl %esi
+	rrmovl %ebp, %esp
+	popl %ebp
+	ret
+
+###############################
+# Source and destination blocks 
+###############################
+	.align 4
+src:
+	.long 1
+	.long 2
+	.long -3
+	.long 4
+	.long -5
+	.long 6
+	.long -7
+	.long -8
+	.long -9
+	.long 10
+	.long 11
+	.long -12
+	.long -13
+	.long -14
+	.long -15
+	.long -16
+	.long 17
+	.long 0xbcdefa # This shouldn't get moved
+
+	.align 16
+Predest:
+	.long 0xbcdefa
+dest:
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+	.long 0xcdefab
+Postdest:
+	.long 0xdefabc
+
+.align 4
+# Run time stack
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+	.long 0
+
+Stack:
