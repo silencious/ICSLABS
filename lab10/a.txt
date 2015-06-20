@@ -1,0 +1,14 @@
+rm -f *~ *.o proxy core
+gcc -pthread -Wall -g  -c proxy.c
+gcc -pthread -Wall -g  -c csapp.c
+gcc -pthread  proxy.o csapp.o   -o proxy
+downloading std
+downloading: http://ftp.sjtu.edu.cn
+downloading: http://ipads.se.sjtu.edu.cn/courses/ics/
+downloading: http://ipads.se.sjtu.edu.cn/courses/ics/labs/proxylab/trustkernel.html
+timeout, killed
+downloading: http://ipads.se.sjtu.edu.cn/courses/ics/labs/proxylab/electsys.html
+timeout, killed
+downloading: http://ipads.se.sjtu.edu.cn/courses/ics/labs/proxylab/2048.html
+timeout, killed
+downloading: http://ipads.se.sjtu.edu.cn/courses/ics/labs/proxylab/video.html
